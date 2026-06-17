@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>GUVD TV — Toshkent IIBB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<style>
+  :root{
+    --ink:#0a0e1a;
+    --surface:#111a30;
+    --surface-2:#1b2747;
+    --surface-3:#24315b;
+    --brass:#c9a24b;
+    --brass-bright:#e8c468;
+    --signal:#d6534a;
+    --online:#3fb67e;
+    --ice:#eaeef8;
+    --slate:#8c97b8;
+    --slate-dim:#5c6889;
+    --divider:rgba(255,255,255,.09);
+    --radius:14px;
+    --font-display:'Oswald',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 50% -10%, rgba(201,162,75,.07), transparent 45%),
+      var(--ink);
+    color:var(--ice);
+    font-family:var(--font-body);
+    padding-bottom:30px;
+    min-height:100vh;
+  }
+
+  /* ===== Status bar ===== */
+  .status-bar{
+    position:sticky;
+    top:0;
+    z-index:1000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:6px 22px;
+    padding:9px 16px;
+    background:rgba(8,12,24,.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--divider);
+    font-family:var(--font-mono);
+    font-size:11.5px;
+  }
+  .status-item{display:flex;align-items:center;gap:6px;color:var(--slate);white-space:nowrap;}
+  .status-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--online);
+    box-shadow:0 0 0 0 rgba(63,182,126,.6);
+    animation:dot-pulse 2s infinite;
+  }
+  @keyframes dot-pulse{
+    0%{box-shadow:0 0 0 0 rgba(63,182,126,.55);}
+    70%{box-shadow:0 0 0 6px rgba(63,182,126,0);}
+    100%{box-shadow:0 0 0 0 rgba(63,182,126,0);}
+  }
+  .status-clock strong{color:var(--ice);font-weight:600;letter-spacing:.5px;}
+  .status-visits{color:var(--brass);}
+  .status-visits strong{color:var(--brass-bright);font-weight:700;}
+  .status-sep{color:var(--slate-dim);}
+
+  /* ===== Brand ===== */
+  .brand{text-align:center;padding:22px 16px 0;}
+  .brand-name{
+    font-family:var(--font-display);
+    font-size:30px;
+    font-weight:700;
+    letter-spacing:5px;
+    color:var(--ice);
+    text-transform:uppercase;
+    margin:0;
+    text-shadow:0 0 24px rgba(201,162,75,.25);
+  }
+  .brand-name span{color:var(--brass-bright);}
+  .brand-sub{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:2.5px;
+    color:var(--slate);
+    text-transform:uppercase;
+    margin-top:7px;
+  }
+  .brand-divider{
+    width:130px;height:1px;
+    background:linear-gradient(90deg,transparent,var(--brass),transparent);
+    margin:16px auto 0;
+    position:relative;
+  }
+  .brand-divider::after{
+    content:'';
+    position:absolute;left:50%;top:-3px;
+    width:7px;height:7px;
+    transform:translateX(-50%) rotate(45deg);
+    background:var(--brass);
+  }
+
+  /* ===== Dispatch ticker ===== */
+  .dispatch{
+    margin-top:18px;
+    position:relative;
+    overflow:hidden;
+    background:linear-gradient(180deg,#0d1f17,#0a1813);
+    border-top:1px solid var(--divider);
+    border-bottom:1px solid var(--divider);
+    padding:7px 0;
+  }
+  .dispatch::before{
+    content:'';
+    position:absolute;inset:0;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.025) 0px,
+      rgba(255,255,255,.025) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events:none;
+  }
+  .dispatch-text{
+    display:inline-block;
+    white-space:nowrap;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    letter-spacing:1px;
+    color:var(--signal);
+    padding-left:100%;
+    animation:dispatch-scroll 20s linear infinite;
+  }
+  @keyframes dispatch-scroll{
+    0%{transform:translateX(0);}
+    100%{transform:translateX(-200%);}
+  }
+
+  /* ===== Channel panel ===== */
+  .channel-panel{padding:18px 16px 0;max-width:560px;margin:0 auto;}
+
+  .now-playing{
+    display:flex;align-items:center;gap:10px;
+    background:var(--surface-2);
+    border:1px solid var(--divider);
+    border-radius:12px;
+    padding:11px 14px;
+    margin-bottom:12px;
+  }
+  .now-playing .tag{
+    font-family:var(--font-mono);
+    font-size:9.5px;font-weight:700;letter-spacing:1px;
+    color:var(--ink);background:var(--brass);
+    padding:3px 7px;border-radius:5px;
+    text-transform:uppercase;flex-shrink:0;
+  }
+  .now-playing .name{
+    font-weight:600;font-size:14px;color:var(--ice);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .now-playing .cat{
+    font-family:var(--font-mono);font-size:10.5px;color:var(--slate);
+    margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38%;
+  }
+
+  .search-row{position:relative;margin-bottom:10px;}
+  .search-row svg{
+    position:absolute;left:13px;top:50%;transform:translateY(-50%);
+    width:14px;height:14px;opacity:.55;pointer-events:none;
+  }
+  .search-input{
+    width:100%;padding:11px 14px 11px 36px;
+    border-radius:10px;border:1px solid var(--divider);
+    background:var(--surface-2);color:var(--ice);
+    font-family:var(--font-body);font-size:14px;
+  }
+  .search-input::placeholder{color:var(--slate-dim);}
+  .search-input:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(201,162,75,.15);}
+
+  .select-wrap{position:relative;}
+  .channel-select{
+    width:100%;
+    padding:12px 40px 12px 14px;
+    border-radius:10px;
+    border:1px solid var(--divider);
+    background-color:var(--surface-2);
+    color:var(--ice);
+    font-family:var(--font-body);
+    font-size:14.5px;font-weight:500;
+    appearance:none;-webkit-appearance:none;-moz-appearance:none;
+    cursor:pointer;
+  }
+  .select-wrap::after{
+    content:'';
+    position:absolute;right:14px;top:50%;
+    width:9px;height:9px;
+    border-right:2px solid var(--brass);
+    border-bottom:2px solid var(--brass);
+    transform:translateY(-65%) rotate(45deg);
+    pointer-events:none;
+  }
+  .channel-select:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(201,162,75,.15);}
+  .channel-select optgroup{
+    background:var(--surface);color:var(--brass-bright);
+    font-family:var(--font-mono);font-weight:700;letter-spacing:.4px;
+  }
+  .channel-select option{background:var(--surface-2);color:var(--ice);font-family:var(--font-body);}
+  .result-count{
+    font-family:var(--font-mono);font-size:10.5px;color:var(--slate-dim);
+    margin-top:7px;text-align:right;letter-spacing:.3px;
+  }
+
+  /* ===== Player ===== */
+  main{max-width:560px;margin:0 auto;}
+  .player-frame{
+    position:relative;
+    margin:18px 16px 0;
+    border-radius:16px;
+    overflow:hidden;
+    background:#000;
+    border:1px solid var(--divider);
+    box-shadow:0 14px 34px rgba(0,0,0,.5);
+  }
+  .corner{position:absolute;width:18px;height:18px;border:2px solid var(--brass);opacity:.85;z-index:4;pointer-events:none;}
+  .corner.tl{top:9px;left:9px;border-right:none;border-bottom:none;border-radius:4px 0 0 0;}
+  .corner.tr{top:9px;right:9px;border-left:none;border-bottom:none;border-radius:0 4px 0 0;}
+  .corner.bl{bottom:9px;left:9px;border-right:none;border-top:none;border-radius:0 0 0 4px;}
+  .corner.br{bottom:9px;right:9px;border-left:none;border-top:none;border-radius:0 0 4px 0;}
+
+  .live-badge{
+    position:absolute;top:13px;left:38px;z-index:5;
+    display:flex;align-items:center;gap:5px;
+    background:var(--signal);color:#fff;
+    font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:1px;
+    padding:3px 8px;border-radius:4px;
+  }
+  .live-badge .pulse{width:6px;height:6px;border-radius:50%;background:#fff;animation:live-pulse 1.3s infinite;}
+  @keyframes live-pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
+
+  video{width:100%;height:46vh;object-fit:contain;display:block;background:#000;}
+
+  .player-status{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(10,14,26,.6);color:var(--slate);
+    font-family:var(--font-mono);font-size:12px;text-align:center;padding:0 20px;
+    opacity:0;transition:opacity .25s;pointer-events:none;z-index:3;
+  }
+  .player-status.show{opacity:1;}
+
+  .fullscreen-btn{
+    display:block;margin:16px auto 0;
+    padding:11px 24px;border:none;border-radius:10px;
+    background:linear-gradient(135deg,var(--brass-bright),var(--brass));
+    color:var(--ink);font-family:var(--font-body);font-size:14.5px;font-weight:700;
+    letter-spacing:.2px;cursor:pointer;
+    box-shadow:0 8px 20px rgba(201,162,75,.22);
+    transition:.2s;
+  }
+  .fullscreen-btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(201,162,75,.32);}
+
+  .controls{display:flex;justify-content:center;margin:18px auto 26px;padding:0 16px;}
+  .segmented{
+    display:inline-flex;gap:4px;padding:4px;
+    background:var(--surface-2);border:1px solid var(--divider);border-radius:12px;
+  }
+  .segmented .btn{
+    border:none;background:transparent;color:var(--slate);
+    font-family:var(--font-body);font-weight:600;font-size:13.5px;
+    padding:9px 17px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;gap:6px;transition:.18s;
+  }
+  .segmented .btn:hover{color:var(--ice);background:rgba(255,255,255,.05);}
+  .segmented .btn.is-active{color:var(--ink);background:var(--brass);}
+
+  /* ===== Footer ===== */
+  .info{
+    max-width:560px;margin:8px auto 0;
+    padding:16px 20px;text-align:center;
+    font-family:var(--font-mono);font-size:11px;letter-spacing:.3px;
+    color:var(--slate-dim);border-top:1px solid var(--divider);
+  }
+  .info .line2{margin-top:4px;color:var(--slate);}
+
+  @media (prefers-reduced-motion: reduce){
+    .dispatch-text,.status-dot,.live-badge .pulse{animation:none !important;}
+  }
+
+  @media (max-width:380px){
+    .brand-name{font-size:25px;letter-spacing:3px;}
+    .status-bar{font-size:10.5px;gap:5px 14px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="status-bar">
+  <div class="status-item"><span class="status-dot"></span>ONLINE</div>
+  <span class="status-sep">•</span>
+  <div class="status-item status-clock">TOSHKENT (UTC+5) <strong id="clockTime">--:--:--</strong></div>
+  <span class="status-sep">•</span>
+  <div class="status-item status-visits">BUGUNGI TASHRIF: <strong id="visitCount">···</strong></div>
+</div>
+
+<header>
+  <div class="brand">
+    <h1 class="brand-name">GUVD <span>TV</span></h1>
+    <div class="brand-sub">Toshkent shahar IIBB · ichki teledastur tarmog'i</div>
+    <div class="brand-divider"></div>
+  </div>
+
+  <div class="dispatch">
+    <span class="dispatch-text">Sayt va bot test rejimida &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Sayt va bot test rejimida &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Sayt va bot test rejimida</span>
+  </div>
+
+  <div class="channel-panel">
+    <div class="now-playing">
+      <span class="tag">LIVE</span>
+      <span class="name" id="nowName">—</span>
+      <span class="cat" id="nowCat"></span>
+    </div>
+
+    <div class="search-row">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#c9a24b" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" class="search-input" id="channelSearch" placeholder="Kanal qidirish..." />
+    </div>
+
+    <div class="select-wrap">
+      <select id="channelSelect" class="channel-select">
+
+
+      <optgroup label="🥊 𝐒𝐩𝐨𝐫𝐭 𝐨𝐥𝐚𝐦𝐢!">
+        <option value="https://stream2.cinerama.uz/1263/tracks-v1a1/mono.m3u8">𝑺𝒆𝒕𝒂𝒏𝒕𝒂 𝑻𝑽 𝟏ㅤㅤ ⏬⏬ </option>
+        <option value="https://stream2.cinerama.uz/1264/tracks-v1a1/mono.m3u8">𝑺𝒆𝒕𝒂𝒏𝒕𝒂 𝑻𝑽 2 </option>
+        <option value="https://stream2.cinerama.uz/1028/tracks-v1a1/mono.m3u8">Матч Арена</option>
+        <option value="https://rmtv.akamaized.net/hls/live/2043153/rmtv-es-web/bitrate_3.m3u8">REAL MADRID TV </option>
+        <option value="https://stream2.cinerama.uz/1439/tracks-v1a1/mono.m3u8">Eurosport 1 HD </option>
+        <option value="https://stream1.cinerama.uz/1004/tracks-v1a1/mono.m3u8">Sport UZ HD</option>
+        <option value="https://stream8.cinerama.uz/1010/tracks-v1a1/playlist.m3u8">Footbol UZ HD</option>
+        <option value="https://a62dad94.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmFrdXRlblRWLWV1X0ZJRkFQbHVzRW5nbGlzaF9ITFM/playlist.m3u8">FIFA +</option>  
+        <option value="https://stream1.cinerama.uz/1229/tracks-v1a1/mono.m3u8">Viju SPORT </option>
+        <option value="https://streams2.sofast.tv/vglive-sk-462904/playlist.m3u8">MMA TV </option>
+        <option value="https://linear-893.frequency.stream/dist/xumo/893/hls/master/playlist.m3u8">UFC TV </option>
+        <option value="https://linear-893.frequency.stream/dist/xumo/893/hls/master/playlist.m3u8">UFC Network </option>
+        <option value="https://streaming.televizor-24-tochka.ru/live/6.m3u8">МатчТВ</option>
+        <option value="https://stream8.cinerama.uz/1049/tracks-v1a1/playlist.m3u8">Матч Планета</option>
+        <option value="https://stream2.cinerama.uz/1245/tracks-v1a1/mono.m3u8">MotoSport </option>
+        <option value="https://stream2.cinerama.uz/1274/tracks-v1a1/mono.m3u8">TraceSportHD </option>
+        <option value="https://dazn-combat-rakuten.amagi.tv/hls/amagi_hls_data_rakutenAA-dazn-combat-rakuten/CDN/master.m3u8">DAZN-TV </option>
+        <option value="https://amg01074-fueltv-fueltvemeaen-rakuten-b6j62.amagi.tv/hls/amagi_hls_data_rakutenAA-fueltvemeaen/CDN/master.m3u8">Fuel HD </option>
+        <option value="https://bein-esp-xumo.amagi.tv/playlistR1080p.m3u8">BEIN SPORT EXTRA </option>
+        <option value="https://vslive.pw/stream/48527/index.m3u8">Vital-Football </option>
+        <option value="https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master_3360.m3u8">RedBullTV </option>
+        <option value="https://stream8.cinerama.uz/1028/tracks-v1a1/playlist.m3u8">KHL - Xokkey</option>
+    
+      
+      </optgroup>
+
+      
+
+    <optgroup label="📰 𝐘𝐚𝐧𝐠𝐢𝐥𝐢𝐤𝐥𝐚𝐫 𝐨𝐥𝐚𝐦𝐢!">
+      <option value="https://stream8.cinerama.uz/1021/tracks-v1a1/playlist.m3u8">Россия 24</option>
+      <option value="https://online-video.rbc.ru/spb/rbctv_spb.m3u8">РБК </option>
+      <option value="https://stream8.cinerama.uz/1015/tracks-v1a1/playlist.m3u8">UzReport </option>
+      <option value="https://tamerkhan.uz/player.html?url=https://streaming.goodstream.cyou/live/210.m3u8">Первый Канал </option>
+      <option value="https://qazaqstantv-stream.qazcdn.com/international/international/playlist.m3u8">Казахстан ТВ </option>
+      <option value="https://tamerkhan.uz/player.html?url=https://streaming.goodstream.cyou/live/213.m3u8">НТВ </option>
+      <option value="https://stream8.cinerama.uz/1001/tracks-v1a1/playlist.m3u8">Ozbekiston24 </option>
+      <option value="https://tv.balkanweb.com/news24/livestream/playlist.m3u8">News24 </option>
+      <option value="https://turnerlive.warnermediacdn.com/hls/live/586495/cnngo/cnn_slate/VIDEO_0_3564000.m3u8">CNN USA </option>
+      <option value="https://content.uplynk.com/channel/4bb4901b934c4e029fd4c1abfc766c37.m3u8">ScrippsNewsHD USA </option>
+      <option value="https://cdn-ue1-prod.tsv2.amagi.tv/linear/amg00731-gannettcoinc-usatodaynews-plex/playlist.m3u8">USA TODAY HD </option>
+      <option value="https://livetv-fa.tubi.video/nbc-news-now/master.m3u8">NBC-NEWS </option>
+      <option value="https://stream.livenewsplay.com:9443/hls/foxnews/foxsd.m3u8">FoxNews </option>
+      <option value="https://live.france24.com/hls/live/2037222-b/F24_AR_HI_HLS/master_5000.m3u8">France24 </option>
+      <option value="https://russian-livews.cgtn.com/hls/LSvexABhNipibK5KRuUkvHZ7220802LSTeze9o8tdFXMHsb1VosgoT220802cd/playlist.m3u8">CGTN Rus </option>
+      <option value="https://tvc-hls.cdnvideo.ru/tvc-res/smil:vd9221_2.smil/playlist.m3u8">ТВЦ </option>
+      <option value="https://live-vgtrksmotrim.cdnvideo.ru/vgtrksmotrim/smotrim-live-03-srt.smil/playlist.m3u8">360-Новостные </option>
+      <option value="https://manifest.googlevideo.com/api/manifest/hls_variant/expire/1758402131/ei/88HOaJOzOpKE0u8Py7-n-AY/ip/188.113.216.100/id/lwYzwdBiaho.3/source/yt_live_broadcast/requiressl/yes/xpc/EgVo2aDSNQ%3D%3D/hfr/1/playlist_duration/30/manifest_duration/30/maudio/1/bui/ATw7iSV5iloVa1y00pP5r0k4r7WJo9n9uWc0eOQgHaQmvRIVg8GROdiJHlHZ3m92rIzv208O53aclNF0/spc/hcYD5RTn-WkmQefL_KImAzBA7Ekziqr0ttXJV35-ohZwbzQ0Uz9JGrtTKHnZX5I9ioymJ2tFkBI/vprv/1/go/1/rqh/5/pacing/0/nvgoi/1/ncsapi/1/keepalive/yes/fexp/51355912%2C51552689%2C51565116%2C51565682%2C51580968%2C51593649/dover/11/itag/0/playlist_type/DVR/sparams/expire%2Cei%2Cip%2Cid%2Csource%2Crequiressl%2Cxpc%2Chfr%2Cplaylist_duration%2Cmanifest_duration%2Cmaudio%2Cbui%2Cspc%2Cvprv%2Cgo%2Crqh%2Citag%2Cplaylist_type/sig/AJfQdSswRgIhAPjnADIzBlDDpI3dxsvOfJXoSi4QfXWCDMtv26JQvFWUAiEA7z_HUKdK_8sxsBZue6dOP3M0mlDamYnjYw_2oybZaWw%3D/file/index.m3u8">EuroNewsRU </option>
+      <option value="https://rt-glb.rttv.com/live/rtnews/playlist_4500Kb.m3u8">RT-NEWS </option>
+      <option value="https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/russia1-hd/index.m3u8">Россия 1 </option>
+      <option value="https://stream2.cinerama.uz/1219/tracks-v1a1/mono.m3u8">Мир 24</option>
+      <option value="https://stream2.cinerama.uz/1257/tracks-v1a1/mono.m3u8">TRT-HABER</option>
+      <option value="https://stream2.cinerama.uz/1255/tracks-v1a1/mono.m3u8">Bloomberg</option>
+    </optgroup>
+
+
+
+    
+    <optgroup label="👀 𝐐𝐢𝐳𝐢𝐪𝐚𝐫𝐥𝐢 𝐛𝐢𝐥𝐢𝐦!">
+      <option value="https://api.alpaca.t62a.com/hls/9110/index.m3u8">Кулинар </option>
+      <option value="https://stream8.cinerama.uz/1206/tracks-v1a1/playlist.m3u8">DasturxonTV </option>
+      <option value="https://stream8.cinerama.uz/1031/tracks-v1a1/playlist.m3u8">Точка открыва </option>
+      <option value="https://stream8.cinerama.uz/1036/tracks-v1a1/playlist.m3u8">Автоплюс+ </option>
+      <option value="https://stream8.cinerama.uz/1037/tracks-v1a1/playlist.m3u8">Т24 </option>
+      <option value="https://stream8.cinerama.uz/1039/tracks-v1a1/playlist.m3u8">Discovery HD </option>
+      <option value="https://stream8.cinerama.uz/1040/tracks-v1a1/playlist.m3u8">Discovery Science </option>
+      <option value="https://stream8.cinerama.uz/1041/tracks-v1a1/playlist.m3u8">National Geographic </option>
+      <option value="https://stream8.cinerama.uz/1042/tracks-v1a1/playlist.m3u8">Nat Geo Wild </option>
+      <option value="https://stream8.cinerama.uz/1046/tracks-v1a1/playlist.m3u8">Viasat History</option>
+      <option value="https://stream8.cinerama.uz/1036/tracks-v1a1/playlist.m3u8">Автоплюс+ </option>
+      <option value="https://stream8.cinerama.uz/1053/tracks-v1a1/playlist.m3u8">FashionTV </option>
+	  <option value="https://stream8.cinerama.uz/1045/tracks-v1a1/playlist.m3u8">Viju EXPLORE </option>
+    </optgroup>
+
+    <optgroup label="🐶 𝐓𝐚𝐛𝐢𝐚𝐭!">
+       <option value="https://cdn-01.bonus-tv.ru/kmir/tracks-v1a1/mono.m3u8">Конный мир </option>
+       <option value="https://stream8.cinerama.uz/1038/tracks-v1a1/playlist.m3u8">Охота и рыбалка </option>
+       <option value="https://stream8.cinerama.uz/1043/tracks-v1a1/playlist.m3u8">Animal Planet HD </option>  
+    </optgroup>
+
+    <optgroup label="🇺🇿 UZ Television!">
+	   <option value="https://stream8.cinerama.uz/1211/tracks-v1a1/playlist.m3u8">Biz TV </option>
+       <option value="https://stream1.cinerama.uz/1210/tracks-v1a1/mono.m3u8">LUX.TV </option>
+       <option value="https://stream1.cinerama.uz/1220/tracks-v1a1/mono.m3u8">Nurafshon TV </option>
+       <option value="https://stream8.cinerama.uz/1003/tracks-v1a1/playlist.m3u8">Toshkent </option>
+       <option value="https://stream8.cinerama.uz/1002/tracks-v1a1/playlist.m3u8">YoshlarTV </option>
+       <option value="https://stream8.cinerama.uz/1016/tracks-v1a1/mono.m3u8">Zo'rTV </option>
+       <option value="https://stream2.cinerama.uz/1017/tracks-v2a1/mono.m3u8">Sevimli </option>
+       <option value="https://stream8.cinerama.uz/1206/tracks-v1a1/playlist.m3u8">DasturxonTV </option>
+       <option value="https://stream8.cinerama.uz/1007/playlist.m3u8">BolajonTV </option>
+       <option value="https://stream8.cinerama.uz/1009/tracks-v1a1/playlist.m3u8">KinoTeatr </option>
+       <option value="https://stream8.cinerama.uz/1001/tracks-v1a1/playlist.m3u8">Uzbekistan24 </option>
+       <option value="https://stream8.cinerama.uz/1015/tracks-v1a1/playlist.m3u8">UzReport </option>
+       <option value="https://stream8.cinerama.uz/1006/tracks-v1a1/playlist.m3u8">DunyoBoylab </option>
+       <option value="https://stream8.cinerama.uz/1014/tracks-v1a1/playlist.m3u8">MilliyTV </option>
+       <option value="https://stream8.cinerama.uz/1217/tracks-v1a1/playlist.m3u8">My5 </option>
+       <option value="https://stream8.cinerama.uz/1008/tracks-v1a1/playlist.m3u8">Navo </option>
+       <option value="https://stream8.cinerama.uz/1001/tracks-v1a1/playlist.m3u8">Uzbekistan </option>
+       <option value="https://stream8.cinerama.uz/1221/tracks-v1a1/playlist.m3u8">RenessansTV </option>
+       <option value="https://stream8.cinerama.uz/1467/playlist.m3u8">Qaraqalpaqstan </option>
+       <option value="https://stream8.cinerama.uz/1013/tracks-v1a1/playlist.m3u8">Mahalla </option>
+       <option value="https://stream1.cinerama.uz/1004/tracks-v1a1/mono.m3u8">Sport UZ HD</option>
+       <option value="https://stream8.cinerama.uz/1005/tracks-v1a1/playlist.m3u8">Madaniyat va Marifat </option>
+       
+    </optgroup>
+
+
+
+
+  
+    
+      </select>
+    </div>
+    <div class="result-count" id="resultCount"></div>
+  </div>
+</header>
+
+<main>
+  <div class="player-frame">
+    <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+    <span class="live-badge"><span class="pulse"></span>LIVE</span>
+    <video id="video" controls></video>
+    <div class="player-status" id="playerStatus"></div>
+  </div>
+
+  <button class="fullscreen-btn">⛶ To'liq ekran qilish</button>
+
+  <div class="controls">
+    <div class="segmented">
+      <button class="btn play">▶ Play</button>
+      <button class="btn pause">⏸ Pause</button>
+      <button class="btn mute" id="muteBtn">🔇 Mute</button>
+    </div>
+  </div>
+</main>
+
+<div class="info">
+  <div class="line1">2026-yil. Toshkent shahar IIBB shaxsiy tarkibi uchun maxsus loyiha.</div>
+  <div class="line2">Muallif: xodim Almuratov Temur.</div>
+</div>
+
+<script>
+  const video = document.getElementById('video');
+  const playBtn = document.querySelector('.play');
+  const pauseBtn = document.querySelector('.pause');
+  const muteBtn = document.getElementById('muteBtn');
+  const channelSelect = document.getElementById('channelSelect');
+  const fullscreenBtn = document.querySelector('.fullscreen-btn');
+  const channelSearch = document.getElementById('channelSearch');
+  const nowName = document.getElementById('nowName');
+  const nowCat = document.getElementById('nowCat');
+  const playerStatus = document.getElementById('playerStatus');
+  const resultCount = document.getElementById('resultCount');
+
+  let hls;
+
+  function getProxyUrl(url) {
+    if (url.startsWith("http://")) {
+      return "https://tamerkhan.uz/proxy.php?url=" + encodeURIComponent(url);
+    }
+    return url;
+  }
+
+  function setStatus(msg) {
+    if (msg) {
+      playerStatus.textContent = msg;
+      playerStatus.classList.add('show');
+    } else {
+      playerStatus.classList.remove('show');
+    }
+  }
+
+  function updateNowPlaying() {
+    const opt = channelSelect.selectedOptions[0];
+    if (!opt) return;
+    nowName.textContent = opt.textContent.trim();
+    const group = opt.parentElement;
+    nowCat.textContent = (group && group.tagName === 'OPTGROUP') ? group.label : '';
+  }
+
+  function loadChannel(url) {
+    if (hls) { hls.destroy(); }
+    setStatus('Yuklanmoqda...');
+    const finalUrl = getProxyUrl(url);
+    if (Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(finalUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal) setStatus("Kanal ulanmadi. Boshqa kanalni tanlang.");
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = finalUrl;
+      video.addEventListener('loadedmetadata', () => video.play());
+    }
+    updateNowPlaying();
+  }
+
+  video.addEventListener('waiting', () => setStatus('Yuklanmoqda...'));
+  video.addEventListener('playing', () => setStatus(null));
+  video.addEventListener('error', () => setStatus('Kanal ulanmadi. Boshqa kanalni tanlang.'));
+
+  loadChannel(channelSelect.value);
+  channelSelect.addEventListener('change', () => loadChannel(channelSelect.value));
+
+  playBtn.addEventListener('click', () => video.play());
+  pauseBtn.addEventListener('click', () => video.pause());
+  muteBtn.addEventListener('click', () => {
+    video.muted = !video.muted;
+    muteBtn.classList.toggle('is-active', video.muted);
+    muteBtn.textContent = video.muted ? '🔈 Unmute' : '🔇 Mute';
+  });
+
+  // --- Channel search filter ---
+  channelSearch.addEventListener('input', () => {
+    const q = channelSearch.value.trim().toLowerCase();
+    const groups = channelSelect.querySelectorAll('optgroup');
+    let visible = 0;
+    groups.forEach(g => {
+      let anyVisible = false;
+      g.querySelectorAll('option').forEach(opt => {
+        const match = opt.textContent.toLowerCase().includes(q);
+        opt.hidden = !match;
+        if (match) { anyVisible = true; visible++; }
+      });
+      g.hidden = !anyVisible;
+    });
+    resultCount.textContent = q ? (visible + " ta kanal topildi") : "";
+  });
+
+  // --- Mobile-only fullscreen button ---
+  function isMobile() {
+    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
+  }
+  if (!isMobile()) {
+    fullscreenBtn.style.display = "none";
+  }
+  fullscreenBtn.addEventListener("click", () => {
+    const currentChannel = channelSelect.value;
+    window.location.href = "player3.html?channel=" + encodeURIComponent(currentChannel);
+  });
+
+  // --- Toshkent (UTC+5) live clock ---
+  const clockEl = document.getElementById('clockTime');
+  function updateClock() {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Tashkent', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    }).formatToParts(now);
+    const get = t => parts.find(p => p.type === t).value;
+    clockEl.textContent = `${get('hour')}:${get('minute')}:${get('second')}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // --- Daily visitor counter (unique IP, counted by a free Cloudflare Worker) ---
+  // GitHub Pages can't run server code, so the counting happens on Cloudflare's
+  // free Workers platform instead. Replace the URL below with YOUR worker's URL
+  // once you've deployed worker.js (setup steps are inside that file).
+  const VISITS_ENDPOINT = "https://guvd-tv-visits.YOUR-SUBDOMAIN.workers.dev";
+
+  const visitEl = document.getElementById('visitCount');
+  fetch(VISITS_ENDPOINT + "?action=hit", { cache: 'no-store' })
+    .then(r => r.json())
+    .then(d => { visitEl.textContent = d.count; })
+    .catch(() => { visitEl.textContent = '—'; });
+</script>
+
+</body>
+</html>
